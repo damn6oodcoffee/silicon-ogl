@@ -9,6 +9,5 @@ public:
 	double vx, vy, vz;
 	double rad = 1.0 * 1.8 * 0.2095 * 1e-9;
 	vector<Atom*> neighbours;
-
 };
 

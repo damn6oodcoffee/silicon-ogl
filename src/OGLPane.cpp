@@ -76,7 +76,7 @@ void OGLPane::render(wxPaintEvent& evt)
     wxGLCanvas::SetCurrent(*m_context);
     wxPaintDC(this); // only to be used in paint events. use wxClientDC to paint outside the paint event
 	
-	
+	glClearColor(0.95f, 0.95f, 0.95f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
     // ------------- draw some 3D ----------------
@@ -103,7 +103,7 @@ void OGLPane::render(wxPaintEvent& evt)
 		glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
 		GLfloat white[] = { 0.8f, 0.8f, 0.8f, 0.0f };
-		GLfloat cyan[] = { 1.f, .0f, .0f, 0.f };
+		GLfloat cyan[] = { 1.0f, 0.7f, 0.0f, 0.f };
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, cyan);
 		glMaterialfv(GL_FRONT, GL_SPECULAR, white);
 		glMaterialf(GL_FRONT, GL_SHININESS, 128.0f);
@@ -118,14 +118,12 @@ void OGLPane::render(wxPaintEvent& evt)
 
 	glTranslatef(offsetX, offsetY, 0);
 
-
+	double atomPosScale = 1.5e9;
 	for (auto& atom : silicon->atoms) {
-		
 		glPushMatrix();
-		glTranslatef(atom.x*1.5e9, atom.y*1.5e9, atom.z*1.5e9);
+		glTranslatef(atom.x * atomPosScale, atom.y * atomPosScale, atom.z * atomPosScale);
 		gluSphere(gluNewQuadric(), 0.1, 16, 16);
 		glPopMatrix();
-
 	}
 
 	glDisable(GL_LIGHTING);
@@ -153,7 +151,7 @@ void OGLPane::render(wxPaintEvent& evt)
 	glColor3f(1, 0, 0); glVertex3d(0.0f, 0.0f, 0.0f); glVertex3d(0.0f, 0.0f, 10.0f);	// z axis.
 	glEnd();
 
-	drawBox(silicon->xWall * 1.5e9);
+	drawBox(silicon->xWall * atomPosScale);
 
     glFlush();
     SwapBuffers();
@@ -235,7 +233,7 @@ void drawBox(double scale)
 
 
 
-	glColor3f(1.0f, 1.0f, 1.0f);
+	glColor3f(0.0f, 0.0f, 0.0f);
 
 
 	// TOP

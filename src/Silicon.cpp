@@ -1,13 +1,12 @@
 #include "Silicon.h"
 
-void Silicon::Init(int n) {
-	N = n;
+void Silicon::Init(int size) {
+	N = size;
 	this->n = 0;
 	//aParam = 3.0 / N;
 	atoms.clear();
 	
 	xWall = yWall = zWall = aParam * N;
-
 
 	for (int i = 0; i < N; i++) {
 		for (int j = 0; j < N; j++) {
@@ -63,15 +62,6 @@ void Silicon::Init(int n) {
 
 void Silicon::FindNeighbors() {
 
-	//for (int i = 0; i < atoms.size(); i++) {
-	//	atoms[i].neighbours.clear();
-	//	for (int j = 0; j < atoms.size(); j++) {
-	//		if (i == j) continue;
-	//		atoms[i].neighbours.push_back(&atoms[j]);
-	//	}
-	//}
-	//return;
-
 	double rad = 1.25 * aParam * sqrt(3) / 4;
 	//rad = atoms[0].rad / 1.5;
 	rad = atoms[0].rad;
@@ -100,14 +90,6 @@ void Silicon::FindNeighbors() {
 				atom.neighbours.push_back(&other);
 			}
 
-
-			//if (abs(atom.x - other.x) < rad || abs(xWall - abs(atom.x - other.x)) < rad) {
-			//	if (abs(atom.y - other.y) < rad || abs(yWall - abs(atom.y - other.y)) < rad) {
-			//		if (abs(atom.z - other.z) < rad || abs(zWall - abs(atom.z - other.z)) < rad) {
-			//			atom.neighbours.push_back(&other);
-			//		}
-			//	}
-			//}
 		}
 	}
 	return;
@@ -116,20 +98,6 @@ void Silicon::FindNeighbors() {
 
 void Silicon::CheckBoundaries() {
 	for (auto& atom : atoms) {
-		//if (atom.x < 0) atom.x += xWall;
-		//else if (atom.x > xWall) atom.x -= xWall;
-		//if (atom.y < 0) atom.y += yWall;
-		//else if (atom.y > yWall) atom.y -= yWall;
-		//if (atom.z < 0) atom.z += zWall;
-		//else if (atom.z > zWall) atom.z -= zWall;
-
-		//while (atom.x < 0) atom.x += xWall;
-		//while (atom.x > xWall) atom.x -= xWall;
-		//while (atom.y < 0) atom.y += yWall;
-		//while (atom.y > yWall) atom.y -= yWall;
-		//while (atom.z < 0) atom.z += zWall;
-		//while (atom.z > zWall) atom.z -= zWall;
-
 		while (atom.x < 0 || atom.x > xWall) {
 			if (atom.x < 0) atom.x += xWall;
 			else if (atom.x > xWall) atom.x -= xWall;
@@ -144,8 +112,6 @@ void Silicon::CheckBoundaries() {
 			if (atom.z < 0) atom.z += zWall;
 			else if (atom.z > zWall) atom.z -= zWall;
 		}
-
-
 	}
 }
 
@@ -242,9 +208,6 @@ void Silicon::Verlet(bool restart) {
 	forceY.resize(atoms.size());
 	forceZ.resize(atoms.size());
 
-	
-	
-	
 
 	for (int i = 0; i < atoms.size(); i++) {
 		forceX[i] = Force(atoms[i], dx, 0, 0);
@@ -293,36 +256,36 @@ double Silicon::f3(Vec3& rij, Vec3& rik) {
 
 }
 
-void Silicon::RandomAtomsShift(bool pos, bool vel) {
+void Silicon::RandomAtomsShift() {
 	
 	for (auto& atom : atoms) {
 
-		if (pos) {
-			atom.x += 0.02 * aParam * (2 * ((double)rand()) / RAND_MAX - 1);
-			atom.y += 0.02 * aParam * (2 * ((double)rand()) / RAND_MAX - 1);
-			atom.z += 0.02 * aParam * (2 * ((double)rand()) / RAND_MAX - 1);
-		}
-		if (vel) {
-			atom.vx = (2 * ((double)rand()) / RAND_MAX - 1);
-			atom.vy = (2 * ((double)rand()) / RAND_MAX - 1);
-			atom.vz = (2 * ((double)rand()) / RAND_MAX - 1);
-
-			double v_abs = sqrt(atom.vx * atom.vx + atom.vy * atom.vy + atom.vz * atom.vz);
-
-			atom.vx *= (vMax/v_abs);
-			atom.vy *= (vMax/v_abs);
-			atom.vz *= (vMax/v_abs);
-			//atom.vx = 3 * vMax;
-			//atom.vy = 3 * vMax;
-			//atom.vz = 3 * vMax;
-		}
-
+		atom.x += 0.02 * aParam * (2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
+		atom.y += 0.02 * aParam * (2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
+		atom.z += 0.02 * aParam * (2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
+		
 	}
 	CheckBoundaries();
 }
 
-#include <fstream>
-#include <iostream>
+void Silicon::RandomAtomVelocity() {
+
+	for (auto& atom : atoms) {
+
+		atom.vx = (2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
+		atom.vy = (2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
+		atom.vz = (2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
+
+		double v_abs = sqrt(atom.vx * atom.vx + atom.vy * atom.vy + atom.vz * atom.vz);
+
+		atom.vx *= vMax / v_abs;
+		atom.vy *= vMax / v_abs;
+		atom.vz *= vMax / v_abs;
+		
+	}
+	CheckBoundaries();
+}
+
 double Silicon::GetTotalEnergy(bool toFile) {
 
 
@@ -378,10 +341,10 @@ double Silicon::GetTotalEnergy(bool toFile) {
 			}
 		}
 
-		std::cout << Ek << '\t' << Ep << '\t' << Ep + Ek << '\n';
 		return 0;
 	}
 
+	/*
 	ofstream myfile("energy.txt", ios::app);
 	if (myfile.is_open())
 	{
@@ -445,7 +408,7 @@ double Silicon::GetTotalEnergy(bool toFile) {
 		fake << (Ep + Ek) / 1.60218e-19;
 		fake.close();
 	}
-	 
+	 */
 	return 0;
 };
 
@@ -481,7 +444,6 @@ void Silicon::Relaxation() {
 		atom.vx *= alpha_rlx;
 		atom.vy *= alpha_rlx;
 		atom.vz *= alpha_rlx;
-
 	}
 }
 
@@ -494,9 +456,9 @@ void Silicon::AvgTemperature() {
 	}
 	avg_Ek = avg_Ek / time_pts / atoms_count;
 	double avg_T = avg_Ek * 2 / (3 * k);
-	ofstream myfile("temp.txt", ios::app);
-	myfile << avg_T << '\n';
-	myfile.close();
+	//ofstream myfile("temp.txt", ios::app);
+	//myfile << avg_T << '\n';
+	//myfile.close();
 	Ek_history.clear();
 
 

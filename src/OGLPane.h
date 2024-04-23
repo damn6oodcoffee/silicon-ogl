@@ -8,18 +8,18 @@
 
 class OGLPane : public wxGLCanvas
 {
-	wxGLContext* m_context;
-	bool bLeftDown=false;
-	bool bRightDown=false;
+	wxGLContext* m_context{ nullptr };
+	bool bLeftDown{ false };
+	bool bRightDown{ false };
 
-	double zAngle=0;
-	double xyAngle=0;
-	double offsetX=0;
-	double offsetY=0;
-	wxPoint mouseClickPt;
+	double zAngle{};
+	double xyAngle{};
+	double offsetX{};
+	double offsetY{};
+	wxPoint mouseClickPt{};
 
 public:
-	Silicon* silicon=nullptr;
+	Silicon* silicon{ nullptr };
 
 public:
 	OGLPane(wxFrame* parent, int* args);

@@ -7,10 +7,10 @@
 class RenderTimer : public wxTimer
 {
 public:
-    OGLPane* pane;
-    mutex* mtx;
+    OGLPane* pane{ nullptr };
+    mutex* mtx{ nullptr };
 public:
-    bool bver = false;
+    bool bver{ false };
     RenderTimer(OGLPane* pane);
     void Notify();
     void start();
