@@ -256,19 +256,19 @@ double Silicon::f3(Vec3& rij, Vec3& rik) {
 
 }
 
-void Silicon::RandomAtomsShift() {
+void Silicon::RandomAtomsShift(double posShiftScale) {
 	
 	for (auto& atom : atoms) {
 
-		atom.x += 0.02 * aParam * (2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
-		atom.y += 0.02 * aParam * (2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
-		atom.z += 0.02 * aParam * (2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
+		atom.x += posShiftScale * aParam * (2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
+		atom.y += posShiftScale * aParam * (2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
+		atom.z += posShiftScale * aParam * (2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
 		
 	}
 	CheckBoundaries();
 }
 
-void Silicon::RandomAtomVelocity() {
+void Silicon::RandomAtomVelocity(double velShiftScale) {
 
 	for (auto& atom : atoms) {
 
@@ -278,9 +278,9 @@ void Silicon::RandomAtomVelocity() {
 
 		double v_abs = sqrt(atom.vx * atom.vx + atom.vy * atom.vy + atom.vz * atom.vz);
 
-		atom.vx *= vMax / v_abs;
-		atom.vy *= vMax / v_abs;
-		atom.vz *= vMax / v_abs;
+		atom.vx *= velShiftScale * vMax / v_abs;
+		atom.vy *= velShiftScale * vMax / v_abs;
+		atom.vz *= velShiftScale * vMax / v_abs;
 		
 	}
 	CheckBoundaries();

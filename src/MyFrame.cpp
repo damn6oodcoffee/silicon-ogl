@@ -28,16 +28,16 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	
 	cellSize = new wxTextCtrl(rightPanel, wxID_ANY, wxString::Format(wxT("%i"), defaultCellSize));
 	cellSize->SetValidator(sizeValidator);
-	atomShift = new wxTextCtrl(rightPanel, wxID_ANY, "1");
+	atomShift = new wxTextCtrl(rightPanel, wxID_ANY, "0.02");
 	atomShift->SetValidator(scaleValidator);
-	atomVel = new wxTextCtrl(rightPanel, wxID_ANY), "1";
+	atomVel = new wxTextCtrl(rightPanel, wxID_ANY, "1");
 	atomVel->SetValidator(scaleValidator);
 	rlxCoef = new wxTextCtrl(rightPanel, wxID_ANY, "0.8");
 	rlxCoef->SetValidator(coefValidator);
 
 	applySize = new wxButton(rightPanel, wxID_ANY, "Применить");
-	rndPos = new wxButton(rightPanel, wxID_ANY, "Случайный\nсдвиг");
-	rndVel = new wxButton(rightPanel, wxID_ANY, "Случайная\nскорость");
+	rndPos = new wxButton(rightPanel, wxID_ANY, "Задать случайный сдвиг\n(в ед. парам-ра решетки)");
+	rndVel = new wxButton(rightPanel, wxID_ANY, "Задать случайную скорость\n(в ед. ...)");
 	reset = new wxButton(rightPanel, wxID_ANY, "Сброс");
 	delAtom = new wxButton(rightPanel, wxID_ANY, "Удалить центральный\nатом");
 	step = new wxButton(rightPanel, wxID_ANY, "Старт");
@@ -66,10 +66,10 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	controlsSizer->Add(new wxStaticText(rightPanel, wxID_ANY, "Размер расчетной ячейки:"), { 0,0 }, { 1,1 }, wxALIGN_CENTER);
 	controlsSizer->Add(cellSize, { 1,0 }, { 1,1 }, wxALIGN_CENTER);
 	controlsSizer->Add(applySize, { 1,1 }, { 1,1 }, wxALIGN_CENTER | wxLEFT | wxRIGHT, FromDIP(5));
-	controlsSizer->Add(new wxStaticText(rightPanel, wxID_ANY, "Величина сдвига:"), { 2,0 }, { 1,1 }, wxALIGN_CENTER);
+	controlsSizer->Add(new wxStaticText(rightPanel, wxID_ANY, "Величина случайного сдвига:"), { 2,0 }, { 1,1 }, wxALIGN_CENTER);
 	controlsSizer->Add(atomShift, { 3,0 }, {1,1}, wxALIGN_CENTER);
 	controlsSizer->Add(rndPos, { 3,1 }, {1,1}, wxALIGN_CENTER | wxLEFT | wxRIGHT, FromDIP(5));
-	controlsSizer->Add(new wxStaticText(rightPanel, wxID_ANY, "Величина скорости:"), { 4,0 }, {1,1}, wxALIGN_CENTER);
+	controlsSizer->Add(new wxStaticText(rightPanel, wxID_ANY, "Величина случайной скорости:"), { 4,0 }, {1,1}, wxALIGN_CENTER);
 	controlsSizer->Add(atomVel, {5,0}, {1,1}, wxALIGN_CENTER);
 	controlsSizer->Add(rndVel, { 5,1 }, {1,1}, wxALIGN_CENTER | wxLEFT | wxRIGHT, FromDIP(5));
 	controlsSizer->Add(new wxStaticText(rightPanel, wxID_ANY, "Коэф. релаксации:"), { 6,0 }, {1,1}, wxALIGN_CENTER);
@@ -89,7 +89,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	
 	rightPanel->SetSizerAndFit(controlsSizer);
 	this->SetSizerAndFit(mainSizer);
-	this->SetSize(wxSize(800, 600));
+	this->SetSize(wxSize(1280, 800));
 	this->SetBackgroundColour(wxColour(230, 230, 230));
 
 	timer = new RenderTimer(oglPane);
@@ -113,12 +113,20 @@ void MyFrame::OnApplySize(wxCommandEvent& event) {
 	oglPane->silicon->Init(size);
 }
 
-void MyFrame::OnRandPos(wxCommandEvent &event) {
-	oglPane->silicon->RandomAtomsShift();
+void MyFrame::OnRandPos(wxCommandEvent& event) {
+	double posShift{};
+	if (!atomShift->GetValue().ToDouble(&posShift)) {
+		return;
+	}
+	oglPane->silicon->RandomAtomsShift(posShift);
 }
 
 void MyFrame::OnRandVel(wxCommandEvent& event) {
-	oglPane->silicon->RandomAtomVelocity();
+	double velShift{};
+	if (!atomVel->GetValue().ToDouble(&velShift)) {
+		return;
+	}
+	oglPane->silicon->RandomAtomVelocity(velShift);
 }
 
 void MyFrame::OnReset(wxCommandEvent& event) {

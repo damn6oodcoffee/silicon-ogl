@@ -55,8 +55,8 @@ public:
 	void Init(int size);
 	void FindNeighbors();
 	void CheckBoundaries();
-	void RandomAtomsShift();
-	void RandomAtomVelocity();
+	void RandomAtomsShift(double posShiftScale);
+	void RandomAtomVelocity(double velShiftScale);
 	void Verlet(bool restart = false);
 	double Force(Atom& atom, double dx, double dy, double dz);
 	double f2(Vec3& rij);
