@@ -30,6 +30,17 @@ OGLPane::~OGLPane()
     delete m_context;
 }
 
+void OGLPane::Init(int cellSize) {
+	if (!silicon)
+		delete silicon;
+	silicon = new Silicon();
+	silicon->Init(cellSize);	
+}
+
+void OGLPane::SetMutex(std::mutex* mtx) {
+	silicon->mtx = mtx;
+}
+
 int OGLPane::getWidth()
 {
 	return GetSize().x;
@@ -84,7 +95,9 @@ void OGLPane::render(wxPaintEvent& evt)
     glLoadIdentity();
 
 	// Point the camera at the origin from the positive octant (x,y,z > 0).
-	gluLookAt(5.0f, 5.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+	double atomPosScale = 1.5e9;
+	double cellLinSize = silicon->xWall * atomPosScale;
+	gluLookAt(2.0f * cellLinSize, 2.0f * cellLinSize, 2.0f * cellLinSize, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 	glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
 	glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
 
@@ -118,7 +131,6 @@ void OGLPane::render(wxPaintEvent& evt)
 
 	glTranslatef(offsetX, offsetY, 0);
 
-	double atomPosScale = 1.5e9;
 	for (auto& atom : silicon->atoms) {
 		glPushMatrix();
 		glTranslatef(atom.x * atomPosScale, atom.y * atomPosScale, atom.z * atomPosScale);
@@ -151,7 +163,7 @@ void OGLPane::render(wxPaintEvent& evt)
 	glColor3f(1, 0, 0); glVertex3d(0.0f, 0.0f, 0.0f); glVertex3d(0.0f, 0.0f, 10.0f);	// z axis.
 	glEnd();
 
-	drawBox(silicon->xWall * atomPosScale);
+	drawBox(cellLinSize);
 
     glFlush();
     SwapBuffers();

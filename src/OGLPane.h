@@ -24,6 +24,8 @@ public:
 public:
 	OGLPane(wxFrame* parent, int* args);
 	virtual ~OGLPane();
+	void Init(int cellSize);
+	void SetMutex(std::mutex* mtx);
 
 	void resized(wxSizeEvent& evt);
 

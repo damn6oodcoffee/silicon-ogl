@@ -13,13 +13,12 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	int defaultCellSize{ 3 };
 
 	oglPane = new OGLPane(this, args);
+	oglPane->Init(defaultCellSize);
+	oglPane->SetMutex(mtx);
 	oglPane->SetWindowStyleFlag(wxSUNKEN_BORDER);
-	oglPane->silicon = new Silicon();
-	oglPane->silicon->Init(defaultCellSize);
-
-	//ChartPanel* chartPanel = new ChartPanel(rightPanel, wxID_ANY);
+	
 	wxIntegerValidator<int> sizeValidator{};
-	sizeValidator.SetRange(1, 10);
+	sizeValidator.SetRange(1, 5);
 	wxFloatingPointValidator<double> scaleValidator(nullptr, wxNUM_VAL_NO_TRAILING_ZEROES);
 	scaleValidator.SetRange(0.0, 100.0);
 	wxFloatingPointValidator<double> coefValidator(nullptr, wxNUM_VAL_NO_TRAILING_ZEROES);
@@ -36,8 +35,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	rlxCoef->SetValidator(coefValidator);
 
 	applySize = new wxButton(rightPanel, wxID_ANY, "Применить");
-	rndPos = new wxButton(rightPanel, wxID_ANY, "Задать случайный сдвиг\n(в ед. парам-ра решетки)");
-	rndVel = new wxButton(rightPanel, wxID_ANY, "Задать случайную скорость\n(в ед. ...)");
+	rndPos = new wxButton(rightPanel, wxID_ANY, "Задать случайны\nсдвиг");
+	rndVel = new wxButton(rightPanel, wxID_ANY, "Задать случайную\nскорость");
 	reset = new wxButton(rightPanel, wxID_ANY, "Сброс");
 	delAtom = new wxButton(rightPanel, wxID_ANY, "Удалить центральный\nатом");
 	step = new wxButton(rightPanel, wxID_ANY, "Старт");
@@ -50,26 +49,14 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	delAtom->Bind(wxEVT_BUTTON, &MyFrame::OnDeleteAtom, this);
 	step->Bind(wxEVT_BUTTON, &MyFrame::OnStep, this);
 	rlxCheck->Bind(wxEVT_CHECKBOX, &MyFrame::OnChecked, this);
-
-	/*
-	auto rightSizer = new wxBoxSizer(wxVERTICAL);
-	rightSizer->Add(rndPos, 0);
-	rightSizer->Add(rndVel, 0);
-	rightSizer->Add(reset, 0);
-	rightSizer->Add(delAtom, 0);
-	rightSizer->Add(step, 0);
-	rightSizer->Add(rlxCheck, 0);
-	//rightSizer->Add(chartPanel, 1, wxEXPAND);
-	rightSizer->AddStretchSpacer(2);
-	*/
 	
 	controlsSizer->Add(new wxStaticText(rightPanel, wxID_ANY, "Размер расчетной ячейки:"), { 0,0 }, { 1,1 }, wxALIGN_CENTER);
 	controlsSizer->Add(cellSize, { 1,0 }, { 1,1 }, wxALIGN_CENTER);
 	controlsSizer->Add(applySize, { 1,1 }, { 1,1 }, wxALIGN_CENTER | wxLEFT | wxRIGHT, FromDIP(5));
-	controlsSizer->Add(new wxStaticText(rightPanel, wxID_ANY, "Величина случайного сдвига:"), { 2,0 }, { 1,1 }, wxALIGN_CENTER);
+	controlsSizer->Add(new wxStaticText(rightPanel, wxID_ANY, "Величина случайного сдвига\n(в ед. парам-ра решетки):", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER_HORIZONTAL), { 2,0 }, { 1,1 }, wxALIGN_CENTER);
 	controlsSizer->Add(atomShift, { 3,0 }, {1,1}, wxALIGN_CENTER);
 	controlsSizer->Add(rndPos, { 3,1 }, {1,1}, wxALIGN_CENTER | wxLEFT | wxRIGHT, FromDIP(5));
-	controlsSizer->Add(new wxStaticText(rightPanel, wxID_ANY, "Величина случайной скорости:"), { 4,0 }, {1,1}, wxALIGN_CENTER);
+	controlsSizer->Add(new wxStaticText(rightPanel, wxID_ANY, "Величина случайной скорости\n(в ед. характерной ск-ти):", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER_HORIZONTAL), { 4,0 }, {1,1}, wxALIGN_CENTER);
 	controlsSizer->Add(atomVel, {5,0}, {1,1}, wxALIGN_CENTER);
 	controlsSizer->Add(rndVel, { 5,1 }, {1,1}, wxALIGN_CENTER | wxLEFT | wxRIGHT, FromDIP(5));
 	controlsSizer->Add(new wxStaticText(rightPanel, wxID_ANY, "Коэф. релаксации:"), { 6,0 }, {1,1}, wxALIGN_CENTER);
@@ -78,7 +65,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	controlsSizer->Add(step, { 8,0 }, {1,1}, wxALIGN_CENTER | wxALL, FromDIP(5));
 	controlsSizer->Add(reset, { 8, 1 }, {1,1}, wxALIGN_CENTER | wxALL, FromDIP(5));
 	controlsSizer->Add(delAtom, { 9,0 }, {1,2},wxALIGN_CENTER | wxALL, FromDIP(5));
-	//controlsSizer->AddStretchSpacer(1);
+
 
 	auto mainSizer = new wxBoxSizer(wxHORIZONTAL);
 
@@ -94,9 +81,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 
 	timer = new RenderTimer(oglPane);
 	timer->start();
-
 	timer->mtx = mtx;
-	oglPane->silicon->mtx = mtx;
 
 	//ofstream myfile("energy.txt");
 	//myfile.close();
@@ -144,6 +129,9 @@ void MyFrame::OnStep(wxCommandEvent& event) {
 	if (!t1) {
 		bCalcInProc = true;
 		t1 = new thread(&MyFrame::CalcVerlet, std::ref(*this));
+		applySize->Disable();
+		reset->Disable();
+		delAtom->Disable();
 		step->SetLabelText("Стоп");
 	}
 	else {
@@ -151,6 +139,9 @@ void MyFrame::OnStep(wxCommandEvent& event) {
 		t1->join();
 		delete t1;
 		t1 = nullptr;
+		applySize->Enable();
+		reset->Enable();
+		delAtom->Enable();
 		step->SetLabelText("Старт");
 	}
 	/*
@@ -169,6 +160,11 @@ void MyFrame::OnDeleteAtom(wxCommandEvent& event) {
 
 
 void MyFrame::OnChecked(wxCommandEvent& event) {
+	double coef{};
+	if (!rlxCoef->GetValue().ToDouble(&coef)) {
+		return;
+	}
 	bRlx = !bRlx;
+	oglPane->silicon->alpha_rlx = coef;
 	oglPane->silicon->bRlx = bRlx;
 }
